@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Stub GitHub Copilot CLI for the tests. Accepts the flag set sar.sh sends, logs its argv, then plays a worker:
+# ticks the progress file, appends to the journal and writes the result, or fails on cue. Never touches the network.
+set -u
+args=("$@")
+printf '%s\n' "${args[@]}" >> "${SAR_CALL_LOG:-/tmp/sar-stub/calls.txt}"
+echo "---" >> "${SAR_CALL_LOG:-/tmp/sar-stub/calls.txt}"
+prompt=""; prev=""
+for a in "${args[@]}"; do [ "$prev" = "-p" ] && prompt="$a"; prev="$a"; done
+task="$(printf '%s' "$prompt" | grep -oE '/[^ ]+\.task\.md' | head -1)"
+base="${task%.task.md}"
+if [ "${PROBE_RO:-no}" = no ] && [ -f "$base.progress.md" ]; then
+  perl -pi -e 's/^- \[ \]/- [x]/' "$base.progress.md"
+  printf '\n## all subtasks\nprogress proven\n' >> "$base.report.md"
+fi
+sleep "${PROBE_SLEEP:-0}"
+if [ -n "${PROBE_OUT_TEXT:-}" ]; then printf '%s\n' "$PROBE_OUT_TEXT"; fi
+if [ -n "${PROBE_ERR_TEXT:-}" ]; then printf '%s\n' "$PROBE_ERR_TEXT" >&2; fi
+if [ -z "${PROBE_FAIL:-}" ]; then
+  if [ -n "${PROBE_RESULT_FROM:-}" ]; then cp "$PROBE_RESULT_FROM" "$base.result.md"
+  else printf 'STATUS: %s\n\nprobe report\n' "${PROBE_STATUS:-DONE}" > "$base.result.md"; fi
+  echo "PROBE-DONE"
+else
+  exit 1
+fi
