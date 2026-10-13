@@ -181,8 +181,8 @@ echo "--- 16. an image-blind agent refuses an image brief ---"
 # No roster model is image-blind by default, so the guard is exercised through the SAR_IMAGE_BLIND override.
 brief "$T/16-q.task.md" one
 printf '\nLook at shots/login.png and shots/home.jpg and judge them.\n' >> "$T/16-q.task.md"
-err="$(SAR_IMAGE_BLIND=gem run gem "$T/16-q.task.md" 2>&1)"; rc=$?
-ckc "blind agent refuses images" "$err" "refusing to send images to gem"
+err="$(SAR_IMAGE_BLIND=luna run luna "$T/16-q.task.md" 2>&1)"; rc=$?
+ckc "blind agent refuses images" "$err" "refusing to send images to luna"
 ckc "names the offending files" "$err" "shots/login.png"
 ckc "points at sol and hk" "$err" "sol to judge"
 ck "refusal is exit 2" "$rc" "2"
@@ -190,15 +190,15 @@ ck "no run files created" "$([ -e "$T/16-q.status" ] && echo yes || echo no)" "n
 # agents outside the list are fine with images
 brief "$T/17-r.task.md" one
 printf '\nLook at shots/login.png and judge it.\n' >> "$T/17-r.task.md"
-SAR_IMAGE_BLIND=gem run sol "$T/17-r.task.md" >/dev/null 2>&1
+SAR_IMAGE_BLIND=luna run sol "$T/17-r.task.md" >/dev/null 2>&1
 ck "sol accepts images" "$(sed -n 's/^state=//p' "$T/17-r.status")" "DONE"
-# the default list is empty, so gem takes images unless told otherwise
+# the default list is empty, so luna takes images unless told otherwise
 brief "$T/17-s.task.md" one
 printf '\nLook at shots/login.png and judge it.\n' >> "$T/17-s.task.md"
-run gem "$T/17-s.task.md" >/dev/null 2>&1
+run luna "$T/17-s.task.md" >/dev/null 2>&1
 ck "default list is empty" "$(sed -n 's/^state=//p' "$T/17-s.status")" "DONE"
 # and the override works
-SAR_IMAGE_BLIND=gem run gem "$T/16-q.task.md" --allow-images >/dev/null 2>&1
+SAR_IMAGE_BLIND=luna run luna "$T/16-q.task.md" --allow-images >/dev/null 2>&1
 ck "--allow-images overrides the guard" "$(sed -n 's/^state=//p' "$T/16-q.status")" "DONE"
 
 echo "--- 17. --lock serialises two tasks on one resource ---"
@@ -228,7 +228,7 @@ ck "lock cleaned up" "$([ -d "${TMPDIR:-/tmp}/sar-lock-staleres" ] && echo held 
 
 echo "--- 19. roster: agents lists every name with its model, and the model reaches copilot ---"
 roster="$(run agents)"
-for a in hk sn sol terra gem auto; do ckc "agents lists $a" "$roster" "$a	copilot --model "; done
+for a in hk sn sol terra luna auto; do ckc "agents lists $a" "$roster" "$a	copilot --model "; done
 ckc "sol is gpt-6.1-sol" "$roster" "sol	copilot --model gpt-6.1-sol"
 ckc "auto is auto" "$roster" "auto	copilot --model auto"
 brief "$T/21-v.task.md" one
@@ -265,7 +265,7 @@ brief "$T/25-z.task.md" one
 PATH="$HERE/stub/bin:$PATH" PROBE_FAIL=1 PROBE_ERR_TEXT='Error: Model "x" from --model flag is not available.' \
   bash "$S" hk "$T/25-z.task.md" >"$R/crash2.out" 2>&1
 ckc "an unavailable model is CRASHED" "$(cat "$R/crash2.out")" "CRASHED"
-ckc "crash routes to the stand-in" "$(run retry "$T/25-z.task.md" 2>&1)" "dispatching to gem"
+ckc "crash routes to the stand-in" "$(run retry "$T/25-z.task.md" 2>&1)" "dispatching to luna"
 
 echo "--- 23. resume passes --resume and never a fresh session id or name ---"
 brief "$T/26-aa.task.md" one two

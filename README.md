@@ -71,7 +71,7 @@ It sends one tiny prompt to each roster model and prints `OK` or `NOT ON THIS PL
 | `sn` | `claude-sonnet-5.5` | Workhorse for work that needs judgement |
 | `sol` | `gpt-6.1-sol` | Reviewer and final judge |
 | `terra` | `gpt-5.6-terra` | Rare fallback for a fully specified edit |
-| `gem` | `gemini-3.8-flash` | Backup operator when `hk` is down or out of quota |
+| `luna` | `gpt-5.6-luna` | Backup operator when `hk` is down or out of quota |
 | `auto` | `auto` | Copilot picks; the only choice on the free plan |
 
 Swap any model without editing the script, through the environment:
@@ -79,7 +79,7 @@ Swap any model without editing the script, through the environment:
 ```bash
 export SAR_MODEL_HK=claude-haiku-4.5
 export SAR_MODEL_SOL=gpt-6-sol
-export SAR_IMAGE_BLIND="gem"        # agents whose model cannot take images
+export SAR_IMAGE_BLIND="luna"        # agents whose model cannot take images
 ```
 
 `bash .github/skills/sar/scripts/sar.sh agents` prints the roster with overrides applied. See [Adding an agent](#adding-an-agent) for a permanent change.
@@ -144,7 +144,7 @@ Two sections do double duty:
 | `sn` | Multi-file features, refactors, root-causing, and text where someone must decide what matters | A long checklist in one brief |
 | `sol` | Every review, including visual; architecture decisions; security- or data-sensitive changes | More than ~15 images in one task |
 | `terra` | A fully specified edit the others cannot take | Anything needing judgement |
-| `gem` | An `hk` task, only when `hk` has crashed or hit its quota | Anything while `hk` is up |
+| `luna` | An `hk` task, only when `hk` has crashed or hit its quota | Anything while `hk` is up |
 | `auto` | An `hk` task on a plan with no model selection | Anything on a plan where the named models work |
 
 The short version: operating things and exact changes go to `hk`, judgement goes to `sn`, verdicts go to `sol`. When unsure between `hk` and `sn`, pick `sn`; a judgement task sent to `hk` costs a whole extra round.

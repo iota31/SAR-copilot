@@ -26,7 +26,7 @@ set -u
 SELF="${BASH_SOURCE[0]:-$0}"
 
 # Agent roster. To add an agent, add its name here and a model in agent_model below.
-AGENTS="hk sn sol terra gem auto"
+AGENTS="hk sn sol terra luna auto"
 
 # The Copilot model behind each agent. Ids are what `copilot --model` accepts on a paid plan; `auto` lets Copilot
 # pick and is the only choice on the free plan. Override any of them without editing this file through the
@@ -37,14 +37,14 @@ agent_model() {
     sn)    echo claude-sonnet-5.5 ;;
     sol)   echo gpt-6.1-sol ;;
     terra) echo gpt-5.6-terra ;;
-    gem)   echo gemini-3.8-flash ;;
+    luna)   echo gpt-5.6-luna ;;
     auto)  echo auto ;;
     *) return 1 ;;
   esac
 }
 
 # Agents whose model cannot take image input; a brief naming an image file is refused for them before the run starts.
-# Empty by default because every roster model above is multimodal. Override with SAR_IMAGE_BLIND="gem hk".
+# Empty by default because every roster model above is multimodal. Override with SAR_IMAGE_BLIND="luna hk".
 IMAGE_BLIND="${SAR_IMAGE_BLIND:-}"
 
 # Sets `launcher` to the command that starts the agent's CLI.
@@ -67,9 +67,9 @@ retry_target() {
     # Waiting is the fix for a quota refusal, so the task keeps its agent instead of moving to a stand-in.
     QUOTA | TIMEOUT) echo "$a" ;;
     CRASHED)
-      case "$a" in hk) echo gem ;; gem | auto) echo sn ;; sn) echo terra ;; terra) echo sol ;; *) echo "" ;; esac ;;
+      case "$a" in hk) echo luna ;; luna | auto) echo sn ;; sn) echo terra ;; terra) echo sol ;; *) echo "" ;; esac ;;
     BLOCKED | FAILED)
-      case "$a" in hk | gem | terra | auto) echo sn ;; sn) echo sol ;; *) echo "" ;; esac ;;
+      case "$a" in hk | luna | terra | auto) echo sn ;; sn) echo sol ;; *) echo "" ;; esac ;;
     *) echo "$a" ;;
   esac
 }

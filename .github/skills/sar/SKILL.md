@@ -1,6 +1,6 @@
 ---
 name: sar
-description: Smart Agent Routing (SAR) for GitHub Copilot CLI. Use when the user invokes /sar, says "use sar", "smart agent routing" or "route this to the agents", or asks to delegate, fan out or parallelize work through cheaper models instead of built-in subagents, fleet mode or /delegate. It routes each task to Claude Haiku (operating things and fully specified work), Claude Sonnet (work that needs judgement) or GPT 6.1 Sol (reviews and final judgement), with GPT 5.6 Terra and Gemini Flash as fallbacks, runs them as headless `copilot -p` workers in the background, tracks each worker's subtasks and journal in files under `.sar/`, and supports stopping, resuming, retrying and verifying a run.
+description: Smart Agent Routing (SAR) for GitHub Copilot CLI. Use when the user invokes /sar, says "use sar", "smart agent routing" or "route this to the agents", or asks to delegate, fan out or parallelize work through cheaper models instead of built-in subagents, fleet mode or /delegate. It routes each task to Claude Haiku (operating things and fully specified work), Claude Sonnet (work that needs judgement) or GPT 6.1 Sol (reviews and final judgement), with GPT 5.6 Terra and GPT 5.6 Luna as fallbacks, runs them as headless `copilot -p` workers in the background, tracks each worker's subtasks and journal in files under `.sar/`, and supports stopping, resuming, retrying and verifying a run.
 ---
 
 # Smart Agent Routing (SAR)
@@ -19,7 +19,7 @@ If the environment variable `SAR_WORKER` is set, you are a SAR worker, not the o
 2. **No doing the work by hand.** Do not write or edit project code, write tests, sweep the codebase, or review diffs in the orchestrating session. Those are tasks to brief and dispatch. The orchestrator plans, writes briefs, reads reports, runs a quick check command, and decides what happens next.
 3. **No direct agent invocation.** Never run `copilot` yourself, with any flags, and never run a worker in the foreground. Only `sar.sh`, only in the background.
 4. **Files, not chat.** The brief goes in a `.task.md` file and the answer comes back in a `.result.md` file. Do not paste a brief into the command line, and do not copy a report into the conversation. Pass file paths.
-5. **Route by the rules below.** Work that needs judgement never goes to `hk`, `gem` or `terra`. Reviews go only to `sol`, or to `sn` when `sol` is the author. Images never go to an agent listed in `SAR_IMAGE_BLIND`.
+5. **Route by the rules below.** Work that needs judgement never goes to `hk`, `luna` or `terra`. Reviews go only to `sol`, or to `sn` when `sol` is the author. Images never go to an agent listed in `SAR_IMAGE_BLIND`.
 
 ### The only exception
 
@@ -42,7 +42,7 @@ Route on what the task needs, not on how big it is: operating things and exact c
 | `sn` (Claude Sonnet 5.5) | Workhorse for work that needs judgement | Complex implementation: multi-file features, refactors, root-causing bugs. Text where someone has to decide what matters: release notes, summaries, explanatory docs | A long checklist in one brief |
 | `sol` (GPT 6.1 Sol) | Reviewer and final judge. The best output in the roster, and the most expensive | Every review, including anything visual. Architecture and design decisions, security or data-integrity sensitive changes, anything `sn` failed at | More than about 15 images in one task |
 | `terra` (GPT 5.6 Terra) | Rare fallback | A fully specified edit that neither `hk` nor `sn` can take | Anything that needs judgement. Anything `hk` or `sn` can do |
-| `gem` (Gemini 3.8 Flash) | Backup operator | An `hk` task, only when `hk` has crashed or is out of quota | Anything while `hk` is available |
+| `luna` (GPT 5.6 Luna) | Backup operator | An `hk` task, only when `hk` has crashed or is out of quota | Anything while `hk` is available |
 | `auto` (Copilot picks) | Only choice on the free plan | Any `hk` task when the paid models are not available on this account | Anything on a plan where the named models work |
 
 What a good brief for each of them looks like:
@@ -76,7 +76,7 @@ Escalating:
 
 `CRASHED` is an agent problem (auth, provider down, a model id this plan does not offer), not a task problem. Send the same brief, as a new task file, to the stand-in, and mention the crash to the user at the end:
 
-- `hk` crashes: `gem`. With `gem` down as well, `sn`.
+- `hk` crashes: `luna`. With `luna` down as well, `sn`.
 - `sn` crashes: `terra`. If that crashes too, `sol`.
 - `sol` crashes: there is no stand-in for the judge. Finish what does not depend on it and tell the user.
 
@@ -249,6 +249,6 @@ Resuming archives the previous attempt as `<name>.attemptN.status` and `<name>.a
 - The report contract the worker is given at dispatch: first line `STATUS: DONE`, `DONE_WITH_NOTES`, `BLOCKED` or `FAILED`, then a `## Checks` section with one `PASS`/`FAIL` line per "Done when" command, a `## Resolution` section for `DONE_WITH_NOTES` and `BLOCKED`, then `## Files` and `## Notes`. A `DONE_WITH_NOTES` claim without `## Resolution` is downgraded to `UNMARKED`.
 - `.sar/` is added to `.git/info/exclude` on first dispatch in a git repo, so run files stay out of commits without changing `.gitignore`.
 - Each worker session is named `sar-<agent>-<task>` and can be reopened by hand with `copilot --resume <session-id>` or `copilot --resume sar-<agent>-<task>`.
-- The model behind each agent can be changed without editing the script: `SAR_MODEL_HK=claude-haiku-4.5`, `SAR_MODEL_SOL=gpt-6-sol`, and so on. `SAR_IMAGE_BLIND="gem"` marks agents whose model cannot take images.
+- The model behind each agent can be changed without editing the script: `SAR_MODEL_HK=claude-haiku-4.5`, `SAR_MODEL_SOL=gpt-6-sol`, and so on. `SAR_IMAGE_BLIND="luna"` marks agents whose model cannot take images.
 - The optional status line segment shows one entry per live dispatch, `● hk: 2/4 writing the token store 3m`, reading only the small `.status` and `.report.md` files. It prints nothing when no dispatch is running.
 - To add an agent, add its name to `AGENTS` and a model to `agent_model` in `scripts/sar.sh`, then add a row to the routing table above.
